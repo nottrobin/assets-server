@@ -21,7 +21,7 @@ from .lib.db_helpers import mongo_db_from_url
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'no_secret')
+SECRET_KEY = os.getenv('SECRET_KEY', 'no_secret')
 
 ALLOWED_HOSTS = ['*']
 
@@ -61,7 +61,7 @@ REST_FRAMEWORK = {
 }
 
 MONGO_DB = mongo_db_from_url(
-    mongo_url=os.environ.get('DATABASE_URL', 'localhost'),
+    mongo_url=os.getenv('DATABASE_URL', 'localhost'),
     default_database='assets'
 )
 
@@ -81,32 +81,31 @@ swift_settings = [
 ]
 if set(swift_settings).issubset(set(os.environ)):
     SWIFT_CONNECTION = swiftclient.client.Connection(
-        os.environ.get('OS_AUTH_URL'),
-        os.environ.get('OS_USERNAME'),
-        os.environ.get('OS_PASSWORD'),
+        os.getenv('OS_AUTH_URL'),
+        os.getenv('OS_USERNAME'),
+        os.getenv('OS_PASSWORD'),
         auth_version='2.0',
-        os_options={'tenant_name': os.environ.get('OS_TENANT_NAME')}
+        os_options={'tenant_name': os.getenv('OS_TENANT_NAME')}
     )
 
 FILE_MANAGER = FileManager(SWIFT_CONNECTION)
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'formatters': {
+        'timestamp': {'format': '[%(asctime)s] %(message)s'}
+    },
     'handlers': {
-        'error_file': {
-            'level': 'ERROR',
-            'filename': os.path.join(BASE_DIR, 'django-error.log'),
-            'class': 'logging.handlers.RotatingFileHandler',
-            'maxBytes': 1 * 1024 * 1024,
-            'backupCount': 2
-        }
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'timestamp',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['error_file'],
-            'level': 'ERROR',
-            'propagate': True
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'ERROR'),
         }
     }
 }
+
