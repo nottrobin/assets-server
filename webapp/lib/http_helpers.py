@@ -45,7 +45,8 @@ def error_response(error, file_path=''):
     500: Anything else
     """
 
-    file_path = file_path or error.filename or ''
+    if hasattr(error, 'filename'):
+        file_path = error.filename
 
     # Get the status from either .errno or .http_status
     status = 500  # Default to "server error"
